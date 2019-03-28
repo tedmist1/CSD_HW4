@@ -1,6 +1,6 @@
 '''
   mab_agent.py
-  
+
   Agent specifications implementing Action Selection Rules.
 '''
 
@@ -72,8 +72,10 @@ class Epsilon_Greedy_Agent(MAB_Agent):
         self.epsilon = epsilon
 
     def choose(self, *args):
+        if np.random.random() < self.epsilon:
+            return np.random.choice(list(range(self.K)))
         ratios = [self.wins[a_t] / self.tries[a_t] for a_t in range(self.K)]
-        return np.random.choice(list(range(self.K)))
+        return np.argmax(ratios)
 
 
 class Epsilon_First_Agent(MAB_Agent):
