@@ -92,7 +92,7 @@ class Epsilon_First_Agent(MAB_Agent):
 
     def choose(self, *args):
         self.currT += 1
-        if (self.currT < self.T and np.random.random() < self.epsilon):
+        if (self.currT < self.epsilon * self.T):
             return np.random.choice(list(range(self.K)))
         ratios = [self.wins[a_t] / self.tries[a_t] for a_t in range(self.K)]
         return np.argmax(ratios)
