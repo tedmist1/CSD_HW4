@@ -41,7 +41,7 @@ agents = [
     Greedy_Agent(K),
     Epsilon_Greedy_Agent(K, EPSILON),
     Epsilon_First_Agent(K, EPSILON, T),
-    Epsilon_Decreasing_Agent(K, EPSILON),
+    Epsilon_Decreasing_Agent(K, EPSILON, T),
     TS_Agent(K)
 ]
 # Change these to describe the agents being compared in a given

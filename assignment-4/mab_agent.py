@@ -104,13 +104,18 @@ class Epsilon_Decreasing_Agent(MAB_Agent):
     with a decreasing value of epsilon over time
     '''
 
-    def __init__(self, K, epsilon):
+    def __init__(self, K, epsilon, T):
         MAB_Agent.__init__(self, K)
         self.epsilon = epsilon
+        self.T = T
+        self.currT = 0
 
     def choose(self, *args):
-        # TODO: Currently makes a random choice -- change!
-        return np.random.choice(list(range(self.K)))
+        self.currT += 1
+        if np.random.random() < self.epsilon*(1-(self.currT/self.T)):
+            return np.random.choice(list(range(self.K)))
+        ratios = [self.wins[a_t] / self.tries[a_t] for a_t in range(self.K)]
+        return np.argmax(ratios)
 
 
 class TS_Agent(MAB_Agent):
