@@ -20,7 +20,7 @@ class MAB_Agent:
     def __init__(self, K):
         # TODO: Placeholder: add whatever you want here
         self.K = K
-        self.tries = [0 for _ in range(self.K)]
+        self.tries = [1 for _ in range(self.K)]
         self.wins = [0 for _ in range(self.K)]
 
     def give_feedback(self, a_t, r_t):
@@ -38,7 +38,7 @@ class MAB_Agent:
         No information is allowed to transfer between each of the N
         repetitions
         '''
-        self.tries = [0 for _ in range(self.K)]
+        self.tries = [1 for _ in range(self.K)]
         self.wins = [0 for _ in range(self.K)]
 
 
@@ -56,8 +56,8 @@ class Greedy_Agent(MAB_Agent):
         MAB_Agent.__init__(self, K)
 
     def choose(self, *args):
-        # TODO: Currently makes a random choice -- change!
-        return np.random.choice(list(range(self.K)))
+        ratios = [self.wins[a_t] / self.tries[a_t] for a_t in range(self.K)]
+        return np.argmax(ratios)
 
 
 class Epsilon_Greedy_Agent(MAB_Agent):
@@ -69,9 +69,10 @@ class Epsilon_Greedy_Agent(MAB_Agent):
 
     def __init__(self, K, epsilon):
         MAB_Agent.__init__(self, K)
+        self.epsilon = epsilon
 
     def choose(self, *args):
-        # TODO: Currently makes a random choice -- change!
+        ratios = [self.wins[a_t] / self.tries[a_t] for a_t in range(self.K)]
         return np.random.choice(list(range(self.K)))
 
 
