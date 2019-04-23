@@ -46,6 +46,13 @@ class ValueIterationAgent(ValueEstimationAgent):
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
 
+        iteration = 0
+        while iteration < self.iterations:
+
+            
+            iteration += 1
+
+
 
     def getValue(self, state):
         """
@@ -62,7 +69,7 @@ class ValueIterationAgent(ValueEstimationAgent):
         """
         "*** YOUR CODE HERE ***"
         print "computeQValueFromValues"
-        util.raiseNotDefined()
+        return self.values[state][action]
 
     def computeActionFromValues(self, state):
         """
@@ -75,7 +82,8 @@ class ValueIterationAgent(ValueEstimationAgent):
         """
         "*** YOUR CODE HERE ***"
         print "computeActionFromValues"
-        util.raiseNotDefined()
+        return max(self.values[state], key=lambda act: self.values[state][act])
+        # util.raiseNotDefined()
 
     def getPolicy(self, state):
         print "getPolicy"
