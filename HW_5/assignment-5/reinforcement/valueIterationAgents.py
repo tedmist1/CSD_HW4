@@ -43,16 +43,43 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.iterations = iterations
         self.values = util.Counter() # A Counter is a dict with default 0
 
+        print(self.values)
+        self.values[mdp.getStates()[0]]
+        print(self.values)
+        print("oooooooooooooooooooooooooooooooooooooo")
+
+        for state in mdp.getStates():
+            print("STATE:")
+            print state
+            for action in mdp.getPossibleActions(state):
+                print("ACTION:")
+                print action
+                print "Possibilities:"
+                print (mdp.getTransitionStatesAndProbs(state, action))
+                for chance in mdp.getTransitionStatesAndProbs(state, action):
+                    print("Rewards: ")
+                    print mdp.getReward(state, action, chance)
+
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
-
+        self.iteration = 0;
+        self.state = self.mdp.getStartState()
+        self.step()
         iteration = 0
         while iteration < self.iterations:
 
-            
+
             iteration += 1
 
+    def step(self):
+        self.iteration += 1
 
+        bestAction = self.computeActionFromValues(self.state)
+        print(bestAction)
+        if self.iteration < self.iterations:
+            step()
+
+        return bestAction
 
     def getValue(self, state):
         """
@@ -81,9 +108,16 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
-        print "computeActionFromValues"
-        return max(self.values[state], key=lambda act: self.values[state][act])
+
+        if len(self.values[state]) > 1:
+            return max(self.values[state], key=lambda act: self.values[state][act])
+
+        if len(self.values[state]) == 1:
+            return self.values[state][0]
+        return None
+
         # util.raiseNotDefined()
+
 
     def getPolicy(self, state):
         print "getPolicy"
