@@ -49,27 +49,31 @@ class ValueIterationAgent(ValueEstimationAgent):
         print("oooooooooooooooooooooooooooooooooooooo")
 
         for state in mdp.getStates():
-            print("STATE:")
-            print state
+            # print("STATE:")
+            # print state
             for action in mdp.getPossibleActions(state):
-                print("ACTION:")
-                print action
-                print "Possibilities:"
-                print (mdp.getTransitionStatesAndProbs(state, action))
+                # print("ACTION:")
+                # print action
+                # print "Possibilities:"
+                self.values[state] = mdp.getTransitionStatesAndProbs(state, action)
+                # print(self.values)
+                # print (mdp.getTransitionStatesAndProbs(state, action))
+                # print max(self.values[state], key=lambda act: self.values[state][act])
                 for chance in mdp.getTransitionStatesAndProbs(state, action):
                     print("Rewards: ")
                     print mdp.getReward(state, action, chance)
 
+
+
+        print self.values
+
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
-        self.iteration = 0;
-        self.state = self.mdp.getStartState()
-        self.step()
-        iteration = 0
-        while iteration < self.iterations:
+
+        # iteration = 0
+        # while iteration < self.iterations:
 
 
-            iteration += 1
 
     def step(self):
         self.iteration += 1
