@@ -64,7 +64,6 @@ class QLearningAgent(ReinforcementAgent):
             return 0
 
         return self.qTable[state][action]
-        # util.raiseNotDefined()
 
 
     def computeValueFromQValues(self, state):
@@ -78,10 +77,7 @@ class QLearningAgent(ReinforcementAgent):
         self.check_state_in_qtable(state)
 
         return self.qTable[state][self.qTable[state].argMax()]
-        # for action in self.qTable[state]:
 
-
-        # util.raiseNotDefined()
 
     def computeActionFromQValues(self, state):
         """
@@ -90,10 +86,10 @@ class QLearningAgent(ReinforcementAgent):
           you should return None.
         """
         "*** YOUR CODE HERE ***"
+        self.check_state_in_qtable(state)
         if len(self.qTable[state]) == 0:
             return None
         return self.qTable[state].sortedKeys()[0] # Need to check to make sure its more than none
-        # util.raiseNotDefined()
 
     def getAction(self, state):
         """
@@ -106,24 +102,17 @@ class QLearningAgent(ReinforcementAgent):
           HINT: You might want to use util.flipCoin(prob)
           HINT: To pick randomly from a list, use random.choice(list)
         """
-        print("ACTION?")
+        self.check_state_in_qtable(state)
         # Pick Action
         legalActions = self.getLegalActions(state)
-        action = None
 
-        print(legalActions)
+        # print(legalActions)
         # Probably going to need changing
-        print("MAKING CHOICE")
         if self.epsilon > random.random():
-            print("MAKING RANDOM CHOICE!")
             return random.choice(legalActions) #Return random action
 
         return self.computeActionFromQValues(state)
 
-        "*** YOUR CODE HERE ***"
-        #util.raiseNotDefined()
-
-        # return action
 
     def update(self, state, action, nextState, reward):
         """
@@ -141,13 +130,9 @@ class QLearningAgent(ReinforcementAgent):
         previousVal = self.qTable[state][action] # previous value in table
         predicted = reward + self.discount *  self.computeValueFromQValues(nextState) # predicted reward of next state
 
-        # Because counters have default of 0, these two lines may be unnecessary
-        if not self.qTable[state][action]:
-            self.qTable[state][action] = 0
 
         self.qTable[state][action] += self.alpha * (predicted - previousVal)
 
-        # util.raiseNotDefined()
 
     def getPolicy(self, state):
         return self.computeActionFromQValues(state)
@@ -159,6 +144,8 @@ class QLearningAgent(ReinforcementAgent):
     def check_state_in_qtable(self, state):
         if state not in self.qTable:
             self.qTable[state] = util.Counter()
+            for action in self.getLegalActions(state):
+                self.qTable[state][action] = 0
 
 
 
