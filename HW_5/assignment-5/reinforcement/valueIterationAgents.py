@@ -43,69 +43,34 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.iterations = iterations
         self.values = util.Counter() # A Counter is a dict with default 0
 
-        print("oooooooooooooooooooooooooooooooooooooo")
         iteration = 0
         values2 = util.Counter()
 
         for state in mdp.getStates():
-            max = float('-inf')
-            for action in mdp.getPossibleActions(state):
-                sumReward = 0
-                for transition in mdp.getTransitionStatesAndProbs(state, action):
-                    sumReward += mdp.getReward(state, action, transition) * transition[1]
-
-                if sumReward > max:
-                    max = sumReward
-
-
-            if len(mdp.getPossibleActions(state)) == 0:
-                max = 0
-            self.values[state] = max
-
-        print(self.values)
-
-
-        values2 = self.values
+            values2[state] = 0
 
         while iteration < self.iterations:
             iteration += 1
+            values2 = util.Counter()
+            # Needs to check next state not current state?
             for state in mdp.getStates():
+                if mdp.isTerminal(state):
+                    continue
                 max = float('-inf')
                 for action in mdp.getPossibleActions(state):
                     instanceReward = 0
                     for transition in mdp.getTransitionStatesAndProbs(state, action):
                         instanceReward += transition[1] * (mdp.getReward(state, action, transition) + self.discount * self.values[transition[0]])
-                        # print(instanceReward)
-                        '''should be a sum over all chances instead'''
-                        # print( mdp.getReward(state, action, chance) if mdp.getReward(state, action, chance) > self.values[state] else self.values[state])
-                        # print(max(mdp.getReward(state, action, transition), self.values[state]))
-                        # sumReward += (mdp.getReward(state, action, transition) if mdp.getReward(state, action, transition) > self.values[state] else self.values[state]) * transition[1]
-
 
                     if instanceReward > max:
-                        # max also needs to check something else here
                         max = instanceReward
 
-
-                    if not values2[state] or values2[state] < max * self.discount:
-                        values2[state] = (max * discount)
-                    #     print(max * discount, bestAction)
+                    if not values2[state] or values2[state] < max :
+                        values2[state] = (max)
 
 
             self.values = values2
-            print(self.values)
 
-
-
-
-
-        print self.values
-
-        # Write value iteration code here
-        "*** YOUR CODE HERE ***"
-
-        # iteration = 0
-        # while iteration < self.iterations:
 
 
     def getValue(self, state):
@@ -121,8 +86,11 @@ class ValueIterationAgent(ValueEstimationAgent):
           value function stored in self.values.
         """
         "*** YOUR CODE HERE ***"
-        return util.raiseNotDefined()
-        # return self.values[state]
+        instanceReward = 0
+        for transition in self.mdp.getTransitionStatesAndProbs(state, action):
+            instanceReward += transition[1] * (self.mdp.getReward(state, action, transition) + self.discount * self.values[transition[0]])
+
+        return instanceReward
 
     def computeActionFromValues(self, state):
         """
@@ -141,14 +109,12 @@ class ValueIterationAgent(ValueEstimationAgent):
         bestActRew = float('-inf')
         for action in self.mdp.getPossibleActions(state):
             sumReward = 0
-            for chance in self.mdp.getTransitionStatesAndProbs(state, action):
-            #     print(self.mdp.getReward(state, action, chance))
-                sumReward += self.mdp.getReward(state, action, chance) * chance[1]
+            for transition in self.mdp.getTransitionStatesAndProbs(state, action):
+                sumReward += transition[1] * (self.mdp.getReward(state, action, transition) + self.discount * self.values[transition[0]])
 
             if sumReward > bestActRew:
                 bestActRew = sumReward
                 bestAct = action
-
 
         return bestAct
 

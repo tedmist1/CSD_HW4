@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -16,7 +16,7 @@ from game import *
 from learningAgents import ReinforcementAgent
 from featureExtractors import *
 
-import random,util,math
+import random,util,math,random
 
 class QLearningAgent(ReinforcementAgent):
     """
@@ -41,6 +41,13 @@ class QLearningAgent(ReinforcementAgent):
     def __init__(self, **args):
         "You can initialize Q-values here..."
         ReinforcementAgent.__init__(self, **args)
+        self.qTable = {}
+
+        #for state in self.getlegalActions(state): # This line is not right
+            #self.qTable[state] = util.Counter()
+
+
+        # INITIALIZE Q TABLE
 
         "*** YOUR CODE HERE ***"
 
@@ -51,7 +58,13 @@ class QLearningAgent(ReinforcementAgent):
           or the Q node value otherwise
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        self.check_state_in_qtable(state)
+
+        if not self.qTable[state]:
+            return 0
+
+        return self.qTable[state][action]
+        # util.raiseNotDefined()
 
 
     def computeValueFromQValues(self, state):
@@ -62,7 +75,13 @@ class QLearningAgent(ReinforcementAgent):
           terminal state, you should return a value of 0.0.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        self.check_state_in_qtable(state)
+
+        return self.qTable[state][self.qTable[state].argMax()]
+        # for action in self.qTable[state]:
+
+
+        # util.raiseNotDefined()
 
     def computeActionFromQValues(self, state):
         """
@@ -71,7 +90,10 @@ class QLearningAgent(ReinforcementAgent):
           you should return None.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        if len(self.qTable[state]) == 0:
+            return None
+        return self.qTable[state].sortedKeys()[0] # Need to check to make sure its more than none
+        # util.raiseNotDefined()
 
     def getAction(self, state):
         """
@@ -84,13 +106,24 @@ class QLearningAgent(ReinforcementAgent):
           HINT: You might want to use util.flipCoin(prob)
           HINT: To pick randomly from a list, use random.choice(list)
         """
+        print("ACTION?")
         # Pick Action
         legalActions = self.getLegalActions(state)
         action = None
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
 
-        return action
+        print(legalActions)
+        # Probably going to need changing
+        print("MAKING CHOICE")
+        if self.epsilon > random.random():
+            print("MAKING RANDOM CHOICE!")
+            return random.choice(legalActions) #Return random action
+
+        return self.computeActionFromQValues(state)
+
+        "*** YOUR CODE HERE ***"
+        #util.raiseNotDefined()
+
+        # return action
 
     def update(self, state, action, nextState, reward):
         """
@@ -102,13 +135,42 @@ class QLearningAgent(ReinforcementAgent):
           it will be called on your behalf
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        self.check_state_in_qtable(state)
+        self.check_state_in_qtable(nextState)
+
+        previousVal = self.qTable[state][action] # previous value in table
+        predicted = reward + self.discount *  self.computeValueFromQValues(nextState) # predicted reward of next state
+
+        # Because counters have default of 0, these two lines may be unnecessary
+        if not self.qTable[state][action]:
+            self.qTable[state][action] = 0
+
+        self.qTable[state][action] += self.alpha * (predicted - previousVal)
+
+        # util.raiseNotDefined()
 
     def getPolicy(self, state):
         return self.computeActionFromQValues(state)
 
     def getValue(self, state):
         return self.computeValueFromQValues(state)
+
+    # Helper to tell if the state has been added already
+    def check_state_in_qtable(self, state):
+        if state not in self.qTable:
+            self.qTable[state] = util.Counter()
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class PacmanQAgent(QLearningAgent):
@@ -141,6 +203,8 @@ class PacmanQAgent(QLearningAgent):
         action = QLearningAgent.getAction(self,state)
         self.doAction(state,action)
         return action
+
+
 
 
 class ApproximateQAgent(PacmanQAgent):
