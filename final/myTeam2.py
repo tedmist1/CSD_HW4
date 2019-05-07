@@ -223,19 +223,22 @@ class OffensiveReflexAgent(ReflexCaptureAgent):
           #redefine features dependent on objectives
           features['nearbyPellets'] = self.numberNearbyPellets(gameState, objective)
           for action in actions:
-              evaluation = features * self.getWeights(gameState, action)
+              # Manually add the features times the hardcoded weight
+              evaluation = self.evaluate(gameState, action) + features['nearbyPellets'] * 0
               if evaluation > maximum:
                   maximum = evaluation
                   bestAction = action
                   bestObjective = objective
 
-      print(self.numberNearbyPellets(gameState, bestObjective))
+      #print(self.numberNearbyPellets(gameState, bestObjective))
+      print(features['nearbyPellets'])
       print(bestAction)
       print(bestObjective)
+      print("=======================")
+      return bestAction
 
 
-
-
+      '''
       # You can profile your evaluation time by uncommenting these lines
       # start = time.time()
       values = [self.evaluate(gameState, a) for a in actions]
@@ -243,9 +246,8 @@ class OffensiveReflexAgent(ReflexCaptureAgent):
 
       maxValue = max(values)
       bestActions = [a for a, v in zip(actions, values) if v == maxValue]
-
-      foodLeft = len(self.getFood(gameState).asList())
-
+      foodLeft = len(self.getFood(gameState).asList())'''
+      '''
       if foodLeft <= 2:
         bestDist = 9999
         for action in actions:
@@ -255,13 +257,14 @@ class OffensiveReflexAgent(ReflexCaptureAgent):
           if dist < bestDist:
             bestAction = action
             bestDist = dist
-        return bestAction
+        return bestAction'''
+
 
       return random.choice(bestActions)
 
 
   def getWeights(self, gameState, action):
-     return {'successorScore': 100, 'distanceToFood': -1, 'nearbyPellets':10000}
+     return {'successorScore': 100, 'distanceToFood': -1}#, 'nearbyPellets':10000}
     #return {'nearbyPellets': 100}
 
 class DefensiveReflexAgent(ReflexCaptureAgent):
