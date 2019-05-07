@@ -16,7 +16,7 @@ from captureAgents import CaptureAgent
 import random, time, util
 from game import Directions
 import game
-
+import os.path
 import numpy as np
 import pandas as pd
 
@@ -55,6 +55,7 @@ all_available_actions = [
     'South',
     'West'
 ]
+DATA_FILE = 'my_team_training'
 
 class DummyAgent(CaptureAgent):
   """
@@ -88,10 +89,11 @@ class DummyAgent(CaptureAgent):
     self.q_learn = QLearningTable(actions=list(range(len(all_available_actions))),
         learning_rate=0.05)
 
+
     self.previous_state = gameState
     self.previous_action = None
-
-
+    if os.path.isfile(DATA_FILE + '.gz'):
+        self.q_learn.q_table = pd.read_pickle(DATA_FILE + '.gz', compression='gzip')
 
     CaptureAgent.registerInitialState(self, gameState)
 
@@ -99,14 +101,19 @@ class DummyAgent(CaptureAgent):
     Your initialization code goes here, if you need any.
     '''
 
+  def saveQLearn(self):
+      self.q_learn.q_table.to_pickle(DATA_FILE + '.gz', 'gzip')
+
+
 
   def chooseAction(self, gameState):
     """
     Picks among actions randomly.
     """
     actions = gameState.getLegalActions(self.index)
-    # Can maybe use getAgentState for previous action?
-    reward = 3
+
+
+    reward = -1
     if self.previous_action:
         self.q_learn.learn(str(self.previous_state), self.previous_action, reward, str(gameState))
 
@@ -114,17 +121,16 @@ class DummyAgent(CaptureAgent):
 
     action = self.q_learn.choose_action(str(gameState))
     choice = all_available_actions[action]
-    print(choice)
-    print(actions)
-    print("================================================================")
+
     if choice not in actions:
         reward = -1000
-        self.previous_action = choice
-        print("Meep")
+        self.previous_action = 0 #Stop is the 0th indexed item
         return 'Stop'
 
     self.previous_action = action
 
+    if gameState.isOver():
+        print("it ended!")
 
     '''
     You should change this in your own agent.

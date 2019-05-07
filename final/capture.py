@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -390,6 +390,11 @@ class CaptureRules:
 
     if state.isOver():
       game.gameOver = True
+
+      for agent in game.agents:
+          if hasattr(agent, 'q_learn'):
+              agent.saveQLearn()
+
       if not game.rules.quiet:
         redCount = 0
         blueCount = 0
@@ -400,7 +405,7 @@ class CaptureRules:
             redCount += agentState.numReturned
           else:
             blueCount += agentState.numReturned
-        
+
         if blueCount >= foodToWin:#state.getRedFood().count() == MIN_FOOD:
           print 'The Blue team has returned at least %d of the opponents\' dots.' % foodToWin
         elif redCount >= foodToWin:#state.getBlueFood().count() == MIN_FOOD:
@@ -534,7 +539,7 @@ class AgentRules:
           agent.numCarrying += 1
           break # the above should only be true for one agent...
 
-      # do all the score and food grid maintainenace 
+      # do all the score and food grid maintainenace
       #state.data.scoreChange += score
       state.data.food = state.data.food.copy()
       state.data.food[x][y] = False
@@ -575,7 +580,7 @@ class AgentRules:
     # ok so agentState is this:
     if (agentState.numCarrying == 0):
       return
-    
+
     # first, score changes!
     # we HACK pack that ugly bug by just determining if its red based on the first position
     # to die...
@@ -887,9 +892,9 @@ def readCommand( argv ):
     else:
       l = layout.getLayout( options.layout )
     if l == None: raise Exception("The layout " + options.layout + " cannot be found")
-    
+
     layouts.append(l)
-    
+
   args['layouts'] = layouts
   args['length'] = options.time
   args['numGames'] = options.numGames
