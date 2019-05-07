@@ -155,7 +155,7 @@ class ReflexCaptureAgent(CaptureAgent):
     """
     return {'successorScore': 1.0}
 
-  def numberNearbyPellets(self, gameState, objective, action='Stop', maxDist=2):
+  def numberNearbyPellets(self, gameState, objective, action='Stop', maxDist=1):
      successor = self.getSuccessor(gameState, action)
      myPos = successor.getAgentState(self.index).getPosition()
      foodList = self.getFood(successor).asList()
