@@ -136,6 +136,10 @@ class ObjectiveCaptureAgent(CaptureAgent):
         maxValue = max(values)
         bestActions = [a for a, v in zip(actions, values) if v == maxValue]
 
+
+
+
+
         foodLeft = len(self.getFood(gameState).asList())
 
         if foodLeft <= 2:
@@ -147,9 +151,33 @@ class ObjectiveCaptureAgent(CaptureAgent):
                 if dist < bestDist:
                     bestAction = action
                     bestDist = dist
-            return bestAction
+            bestActions =  [bestAction]
+
+        # UPDATE WEIGHTS HERE
+        # Need to estimate Q value of next state
+        reward = 1
+        val_next_state = 1
+        self.updateWeights(reward, maxValue, val_next_state, self.getFeatures(gameState, bestActions[0]))
+
 
         return random.choice(bestActions)
+
+
+    def updateWeights(self, reward, Q_this_state, Q_next_state, features):
+        learning_rate = 0.05 # Will be fixed
+        reward_decay = 0.99 # Will be fixed
+
+        difference = reward + reward_decay * Q_next_state - Q_this_state
+        # print(difference)
+        for weight in self.weights:
+            # num = num + learning rate * feature value of that weight
+            '''print(weight)
+            print(self.weights[weight])
+            #self.weights[weight] = self.weights[weight] + learning_rate * features[weight] * difference
+            print(self.weights[weight] + learning_rate * features[weight] * difference)
+            print("=========================================")'''
+
+        return {'successorScore': 100, 'distanceToFood': -1, 'objective': -10}
 
     def getSuccessor(self, gameState, action):
         """
@@ -278,7 +306,8 @@ class OffensiveObjectiveAgent(ObjectiveCaptureAgent):
     we give you to get an idea of what an offensive agent might look like,
     but it is by no means the best or only way to build an offensive agent.
     """
-
+    fileName = 'offensive_save'
+    weights = {'successorScore': 100, 'distanceToFood': -1, 'objective': -10}
     def getFeatures(self, gameState, action):
         features = util.Counter()
         successor = self.getSuccessor(gameState, action)
@@ -307,8 +336,12 @@ class OffensiveObjectiveAgent(ObjectiveCaptureAgent):
             features['distanceToFood'] = minDistance if not inDanger else 100
         return features
 
+
     def getWeights(self, gameState, action):
         return {'successorScore': 100, 'distanceToFood': -1, 'objective': -10}
+
+    #def saveWeights(self, gameState):
+
 
 
 class DefensiveObjectiveAgent(ObjectiveCaptureAgent):
@@ -318,6 +351,8 @@ class DefensiveObjectiveAgent(ObjectiveCaptureAgent):
     could be like.  It is not the best or only way to make
     such an agent.
     """
+    fileName = 'defensiveSave'
+    weights = {'numInvaders': -1000, 'onDefense': 100, 'invaderDistance': -10, 'stop': -100, 'reverse': -2, 'objective': -0.5}
 
     def getFeatures(self, gameState, action):
         features = util.Counter()
