@@ -28,6 +28,7 @@ import util
 import sys
 from game import Directions
 import game
+import math
 from util import nearestPoint
 
 #################
@@ -36,7 +37,7 @@ from util import nearestPoint
 
 
 def createTeam(firstIndex, secondIndex, isRed,
-               first='DefensiveReflexAgent', second='OffensiveReflexAgent'):
+               first='DefensiveObjectiveAgent', second='OffensiveObjectiveAgent'):
     """
     This function should return a list of two agents that will form the
     team, initialized using firstIndex and secondIndex as their agent
@@ -53,28 +54,82 @@ def createTeam(firstIndex, secondIndex, isRed,
     """
     return [eval(first)(firstIndex), eval(second)(secondIndex)]
 
+
+# Safe Territory
+obj1 = (15, 1)
+obj2 = (15, 4)
+obj3 = (15, 7)
+obj4 = (15, 11)
+obj5 = (15, 14)
+obj11 = (11, 3)
+obj12 = (13, 6)
+obj13 = (12, 10)
+obj14 = (12, 13)
+
+# Enemy Territory
+obj6 = (19, 2)
+obj7 = (18, 7)
+obj8 = (20, 13)
+obj9 = (25, 2)
+obj10 = (26, 10)
+objectives = {
+    obj1: [obj6, obj11, obj5],
+    obj2: [obj6, obj12],
+    obj3: [obj7, obj13, obj12],
+    obj4: [obj7, obj5, obj14, obj13],
+    obj5: [obj8, obj4, obj14, obj1],
+    obj6: [obj9, obj7, obj2, obj1],
+    obj7: [obj6, obj10, obj8, obj4, obj3],
+    obj8: [obj7, obj10, obj5],
+    obj9: [obj10, obj6],
+    obj10: [obj8, obj7, obj9],
+    obj11: [obj1, obj12],
+    obj12: [obj2, obj3, obj13, obj11],
+    obj13: [obj3, obj4, obj14, obj12],
+    obj14: [obj4, obj5, obj13],
+}
+
 ##########
 # Agents #
 ##########
 
 
-class ReflexCaptureAgent(CaptureAgent):
+class ObjectiveCaptureAgent(CaptureAgent):
     """
-    A base class for reflex agents that chooses score-maximizing actions
+    A base class for objective agents that chooses objective-maximizing actions
     """
 
     def registerInitialState(self, gameState):
         self.start = gameState.getAgentPosition(self.index)
+        self.prevObjective = None
+        self.currentObjective = None
+        self.frontierObjectives = [obj11, obj12, obj13, obj14]
+        self.futureObjective = None
+
         CaptureAgent.registerInitialState(self, gameState)
 
     def chooseAction(self, gameState):
         """
         Picks among the actions with the highest Q(s,a).
         """
-        actions = gameState.getLegalActions(self.index)
 
+        for objective in self.frontierObjectives:
+            if gameState.getAgentPosition(self.index) == objective:
+                self.prevObjective = self.currentObjective
+                self.currentObjective = objective
+                self.frontierObjectives = objectives[self.currentObjective]
+                self.futureObjective = None
+
+        objValues = [self.evaluateObjective(
+            gameState, o) for o in self.frontierObjectives]
+        # print(objValues)
+        maxObjValue = max(objValues)
+        bestObjectives = [a for a, v in zip(
+            self.frontierObjectives, objValues) if v == maxObjValue]
+        self.futureObjective = random.choice(bestObjectives)
         # You can profile your evaluation time by uncommenting these lines
         # start = time.time()
+        actions = gameState.getLegalActions(self.index)
         values = [self.evaluate(gameState, a) for a in actions]
         # print 'eval time for agent %d: %.4f' % (self.index, time.time() - start)
 
@@ -132,10 +187,94 @@ class ReflexCaptureAgent(CaptureAgent):
         """
         return {'successorScore': 1.0}
 
+    def evaluateObjective(self, gameState, objective):
+        features = self.getObjectiveFeatures(gameState, objective)
+        weights = self.getObjectiveWeights(gameState, objective)
+        return features * weights
 
-class OffensiveReflexAgent(ReflexCaptureAgent):
+    def getObjectiveFeatures(self, gameState, objective):
+        """
+        Returns a counter of features for the state
+        """
+        prevFobj = self.futureObjective
+        self.futureObjective = objective
+        actions = gameState.getLegalActions(self.index)
+        values = [self.evaluate(gameState, a) for a in actions]
+        maxValue = max(values)
+        bestActions = [a for a, v in zip(actions, values) if v == maxValue]
+        action = random.choice(bestActions)
+        successor = self.getSuccessor(gameState, action)
+        sucPos = successor.getAgentState(self.index).getPosition()
+
+        features = util.Counter()
+        # features['numNearbyPellets'] = self.numberNearbyPellets(
+        #     gameState, objective)
+        if self.prevObjective == objective:
+            features['reverse'] = 1
+        if prevFobj != objective:
+            features['change'] = 1
+        enemies = [successor.getAgentState(i)
+                   for i in self.getOpponents(successor)]
+        defenders = [a for a in enemies if not a.isPacman and a.getPosition()
+                     != None]
+        if len(defenders) > 0:
+            dists = [self.getMazeDistance(
+                sucPos, a.getPosition()) for a in defenders]
+            features['inDanger'] = 5 - min(dists) if min(dists) < 5 else 0
+
+        features['spread'] = objective[0] - \
+            15 if self.getAgentClass(gameState) == 'A' else 0 - objective[0]
+
+        features['risk'] = self.getScore(successor) - objective[1]
+
+        self.futureObjective = prevFobj
+
+        return features
+
+    def getObjectiveWeights(self, gameState, objective):
+        """
+        Normally, weights do not depend on the gamestate.  They can be either
+        a counter or a dictionary.
+        """
+        return {'inDanger': -20, 'reverse': -10, 'change': -5, 'spread': 0, 'risk': -3}
+
+    def getAgentClass(self, gameState):
+        if self.getTeam(gameState)[0] == self.index:
+            return 'A'
+        else:
+            return 'B'
+
+    def numberNearbyPellets(self, gameState, objective, action='Stop', maxDist=2):
+        successor = self.getSuccessor(gameState, action)
+        myPos = successor.getAgentState(self.index).getPosition()
+        foodList = self.getFood(successor).asList()
+
+        y2 = objective[1]
+        y1 = myPos[1]
+        x2 = objective[0]
+        x1 = myPos[0]
+        count = 0
+        for food in foodList:
+            y0 = food[1]
+            x0 = food[0]
+            if self.getDistance(myPos, objective) == 0:
+                continue
+            distance = math.fabs((y2 - y1) * x0 - (x2 - x1) * y0 +
+                                 x2 * y1 - y2 * x2) / self.getDistance(myPos, objective)
+            # print(distance)
+            if distance < maxDist:
+                count += 1
+
+        return count
+
+    def getDistance(self, pointA, pointB):
+        return math.sqrt((pointB[0] - pointA[0]) * (pointB[0] - pointA[0]) +
+                         (pointB[1] - pointA[1]) * (pointB[1] - pointA[1]))
+
+
+class OffensiveObjectiveAgent(ObjectiveCaptureAgent):
     """
-    A reflex agent that seeks food. This is an agent
+    An objective agent that seeks food. This is an agent
     we give you to get an idea of what an offensive agent might look like,
     but it is by no means the best or only way to build an offensive agent.
     """
@@ -144,24 +283,37 @@ class OffensiveReflexAgent(ReflexCaptureAgent):
         features = util.Counter()
         successor = self.getSuccessor(gameState, action)
         foodList = self.getFood(successor).asList()
-        features['successorScore'] = -len(foodList)  # self.getScore(successor)
+        myPos = successor.getAgentState(self.index).getPosition()
 
+        enemies = [successor.getAgentState(i)
+                   for i in self.getOpponents(successor)]
+        defenders = [a for a in enemies if not a.isPacman and a.getPosition()
+                     != None]
+        inDanger = False
+        if len(defenders) > 0:
+            dists = [self.getMazeDistance(
+                myPos, a.getPosition()) for a in defenders]
+            # print(min(dists))
+            inDanger = min(dists) <= 5
+
+        # self.getScore(successor)
+        features['successorScore'] = -len(foodList) if not inDanger else -21
+        features['objective'] = 0 if not inDanger else self.getMazeDistance(
+            myPos, self.futureObjective)
         # Compute distance to the nearest food
-
         if len(foodList) > 0:  # This should always be True,  but better safe than sorry
-            myPos = successor.getAgentState(self.index).getPosition()
             minDistance = min([self.getMazeDistance(myPos, food)
                                for food in foodList])
-            features['distanceToFood'] = minDistance
+            features['distanceToFood'] = minDistance if not inDanger else 100
         return features
 
     def getWeights(self, gameState, action):
-        return {'successorScore': 100, 'distanceToFood': -1}
+        return {'successorScore': 100, 'distanceToFood': -1, 'objective': -10}
 
 
-class DefensiveReflexAgent(ReflexCaptureAgent):
+class DefensiveObjectiveAgent(ObjectiveCaptureAgent):
     """
-    A reflex agent that keeps its side Pacman-free. Again,
+    An objective agent that keeps its side Pacman-free. Again,
     this is to give you an idea of what a defensive agent
     could be like.  It is not the best or only way to make
     such an agent.
@@ -178,6 +330,9 @@ class DefensiveReflexAgent(ReflexCaptureAgent):
         features['onDefense'] = 1
         if myState.isPacman:
             features['onDefense'] = 0
+
+        features['objective'] = self.getMazeDistance(
+            myPos, self.futureObjective)
 
         # Computes distance to invaders we can see
         enemies = [successor.getAgentState(i)
@@ -200,4 +355,4 @@ class DefensiveReflexAgent(ReflexCaptureAgent):
         return features
 
     def getWeights(self, gameState, action):
-        return {'numInvaders': -1000, 'onDefense': 100, 'invaderDistance': -10, 'stop': -100, 'reverse': -2}
+        return {'numInvaders': -1000, 'onDefense': 100, 'invaderDistance': -10, 'stop': -100, 'reverse': -2, 'objective': -0.5}
