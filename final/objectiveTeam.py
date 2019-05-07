@@ -156,8 +156,11 @@ class ObjectiveCaptureAgent(CaptureAgent):
 
         # UPDATE WEIGHTS HERE
         # Need to estimate Q value of next state
+        # Might need to do some saving of values and update the previous state
+        # If that is the case, we just need reward still
         reward = 1
         val_next_state = 1
+        # 100% certain that maxValue is our Q value
         self.updateWeights(reward, maxValue, val_next_state, self.getFeatures(gameState, bestActions[0]))
 
 
