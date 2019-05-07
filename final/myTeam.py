@@ -114,7 +114,16 @@ class DummyAgent(CaptureAgent):
 
     action = self.q_learn.choose_action(str(gameState))
     choice = all_available_actions[action]
-    self.previous_action = choice
+    print(choice)
+    print(actions)
+    print("================================================================")
+    if choice not in actions:
+        reward = -1000
+        self.previous_action = choice
+        print("Meep")
+        return 'Stop'
+
+    self.previous_action = action
 
 
     '''
