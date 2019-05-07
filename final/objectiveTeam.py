@@ -105,6 +105,7 @@ class ObjectiveCaptureAgent(CaptureAgent):
         self.currentObjective = None
         self.frontierObjectives = [obj11, obj12, obj13, obj14]
         self.futureObjective = None
+        self.loadQLearn()
 
         CaptureAgent.registerInitialState(self, gameState)
 
@@ -171,13 +172,25 @@ class ObjectiveCaptureAgent(CaptureAgent):
         # print(difference)
         for weight in self.weights:
             # num = num + learning rate * feature value of that weight
-            '''print(weight)
+            print(weight)
             print(self.weights[weight])
-            #self.weights[weight] = self.weights[weight] + learning_rate * features[weight] * difference
+            '''#self.weights[weight] = self.weights[weight] + learning_rate * features[weight] * difference
             print(self.weights[weight] + learning_rate * features[weight] * difference)
             print("=========================================")'''
 
+
         return {'successorScore': 100, 'distanceToFood': -1, 'objective': -10}
+
+    def saveQLearn(self):
+        file = open(self.fileName, "w")
+        file.write(str(self.weights))
+        file.close()
+
+    def loadQLearn(self):
+        file = open(self.fileName, "r")
+        self.weights = eval(file.readline())
+        print(self.weights)
+        file.close()
 
     def getSuccessor(self, gameState, action):
         """

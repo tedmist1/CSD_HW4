@@ -392,7 +392,7 @@ class CaptureRules:
       game.gameOver = True
 
       for agent in game.agents:
-          if hasattr(agent, 'q_learn'):
+          if hasattr(agent, 'weights'):
               agent.saveQLearn()
 
       if not game.rules.quiet:
